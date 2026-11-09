@@ -1,0 +1,2 @@
+# Medicool
+Medical news
