@@ -177,8 +177,7 @@ p{margin:0}
 .page.black img{width:100%;height:100%;object-fit:contain;display:block}
 #hint{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#cfd5de;opacity:.85;pointer-events:none;transition:opacity .6s;white-space:nowrap}
 .more{display:inline-block;margin-left:.35em;font-family:var(--font-mono);font-size:.78em;font-weight:700;letter-spacing:.02em;color:var(--accent);text-decoration:none;white-space:nowrap}.more *{pointer-events:none}
-.foot>span:first-child{margin-left:34px}
-#sound{position:fixed;left:10px;bottom:4px;width:34px;height:34px;padding:0;border:0;border-radius:50%;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;color:#fff;background:#22B45A;box-shadow:0 2px 8px rgba(0,0,0,.35);-webkit-tap-highlight-color:transparent;transition:background .2s}#sound.off{background:#E5394B}#sound svg{width:20px;height:20px;display:block;pointer-events:none}#sound .x{display:none}#sound.off .x{display:inline}#sound.off .w{display:none}
+#sound{position:fixed;left:50%;bottom:4px;margin-left:-17px;width:34px;height:34px;padding:0;border:0;border-radius:50%;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;color:#fff;background:#22B45A;box-shadow:0 2px 8px rgba(0,0,0,.35);-webkit-tap-highlight-color:transparent;transition:background .2s}#sound.off{background:#E5394B}#sound svg{width:20px;height:20px;display:block;pointer-events:none}#sound .x{display:none}#sound.off .x{display:inline}#sound.off .w{display:none}
 </style>
 </head>
 <body>
@@ -519,23 +518,33 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   // ---- sunet de pagină întoarsă (sintetizat, fără fișiere) ----
   var ctx=null, soundOn=true;
   function ac(){ if(!ctx){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(ctx&&ctx.state==='suspended'){ try{ctx.resume();}catch(e){} } return ctx; }
-  function noiseBuf(c,dur){ var n=Math.floor(c.sampleRate*dur), b=c.createBuffer(1,n,c.sampleRate), d=b.getChannelData(0);
-    for(var i=0;i<n;i++){ var crackle=Math.random()<0.02?(Math.random()*2-1)*1.6:0; d[i]=(Math.random()*2-1)*0.55+crackle; } return b; }
-  function burst(c,t0,dur,f0,f1,q,peak,attack){
-    var s=c.createBufferSource(); s.buffer=noiseBuf(c,dur);
-    var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=q;
-    bp.frequency.setValueAtTime(f0,t0); bp.frequency.exponentialRampToValueAtTime(f1,t0+dur);
-    var hp=c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=280;
-    var g=c.createGain(); g.gain.setValueAtTime(0.0001,t0);
-    g.gain.exponentialRampToValueAtTime(peak,t0+attack);
-    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
-    s.connect(bp); bp.connect(hp); hp.connect(g); g.connect(c.destination); s.start(t0); s.stop(t0+dur+0.02);
+  // ---- foaie mare de ziar întoarsă: apucat, foșnet lung de aer, fâlfâit, crăpături, așezare ----
+  function noiseBuf(c,dur,crack){ var n=Math.floor(c.sampleRate*dur), b=c.createBuffer(1,n,c.sampleRate), d=b.getChannelData(0), last=0;
+    for(var i=0;i<n;i++){ var w=Math.random()*2-1; last=last*0.6+w*0.4; var k=Math.random()<crack?(Math.random()*2-1)*2.2:0; d[i]=last*0.9+k; } return b; }
+  function layer(c,o){ // o: t,dur,crack,type,f:[[time,freq]...],q,env:[[time,gain]...],flutter
+    var s=c.createBufferSource(); s.buffer=noiseBuf(c,o.dur,o.crack||0);
+    var f=c.createBiquadFilter(); f.type=o.type||'bandpass'; f.Q.value=o.q||0.7;
+    f.frequency.setValueAtTime(o.f[0][1],o.t); for(var i=1;i<o.f.length;i++) f.frequency.exponentialRampToValueAtTime(o.f[i][1],o.t+o.f[i][0]);
+    var g=c.createGain(); g.gain.setValueAtTime(0.0001,o.t); for(var j=0;j<o.env.length;j++) g.gain.exponentialRampToValueAtTime(o.env[j][1],o.t+o.env[j][0]);
+    var out=g;
+    if(o.flutter){ var am=c.createGain(); am.gain.value=0.55; var lfo=c.createOscillator(); lfo.frequency.setValueAtTime(o.flutter[0],o.t); lfo.frequency.linearRampToValueAtTime(o.flutter[1],o.t+o.dur);
+      var dep=c.createGain(); dep.gain.value=0.45; lfo.connect(dep); dep.connect(am.gain); g.connect(am); out=am; lfo.start(o.t); lfo.stop(o.t+o.dur+0.05); }
+    s.connect(f); f.connect(g); out.connect(master(c)); s.start(o.t); s.stop(o.t+o.dur+0.05);
   }
+  var mst=null; function master(c){ if(!mst){ mst=c.createDynamicsCompressor(); mst.threshold.value=-14; mst.ratio.value=4; var mg=c.createGain(); mg.gain.value=1.6; mst.connect(mg); mg.connect(c.destination); } return mst; }
   function flipSound(){
     if(!soundOn) return; var c=ac(); if(!c) return; var t=c.currentTime+0.01;
-    burst(c,t,0.42,900,3200,0.7,0.55,0.07);      // foșnetul hârtiei
-    burst(c,t+0.05,0.30,2400,5200,1.2,0.18,0.05); // sclipirea marginii
-    burst(c,t+0.34,0.09,500,260,0.9,0.7,0.008);   // pagina care cade
+    // 1. degetele apucă foaia: mototolire scurtă, densă
+    layer(c,{t:t,dur:0.16,crack:0.06,f:[[0,3800],[0.16,2600]],q:0.9,env:[[0.012,0.45],[0.16,0.0001]]});
+    // 2. foaia mare taie aerul: „whoosh” lung, grav, care urcă și coboară
+    layer(c,{t:t+0.04,dur:0.82,type:'bandpass',f:[[0,380],[0.35,1500],[0.82,520]],q:0.45,env:[[0.22,0.55],[0.5,0.42],[0.82,0.0001]]});
+    // 3. hârtia fâlfâie pe drum (modulație rapidă, din ce în ce mai lentă)
+    layer(c,{t:t+0.08,dur:0.66,crack:0.012,f:[[0,1700],[0.4,3200],[0.66,1400]],q:0.8,env:[[0.18,0.32],[0.45,0.22],[0.66,0.0001]],flutter:[22,9]});
+    // 4. foșnet fin pe margine
+    layer(c,{t:t+0.12,dur:0.55,type:'highpass',f:[[0,4200],[0.55,6000]],q:0.5,env:[[0.2,0.12],[0.55,0.0001]]});
+    // 5. foaia se așază: bufnitură moale + plesnet de hârtie
+    layer(c,{t:t+0.74,dur:0.2,type:'lowpass',f:[[0,420],[0.2,140]],q:0.8,env:[[0.01,0.8],[0.2,0.0001]]});
+    layer(c,{t:t+0.745,dur:0.12,crack:0.03,f:[[0,1300],[0.12,700]],q:1,env:[[0.008,0.4],[0.12,0.0001]]});
   }
   document.addEventListener('pointerdown',ac,{passive:true});
   document.addEventListener('touchstart',ac,{passive:true});
