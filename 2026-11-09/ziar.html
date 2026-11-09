@@ -139,10 +139,10 @@ p{margin:0}
 .glint>img{margin:0!important}
 .glint.big{margin:-.6em 0 -.9em;-webkit-mask-image:radial-gradient(ellipse 58% 62% at 50% 50%,#000 72%,transparent 100%);mask-image:radial-gradient(ellipse 58% 62% at 50% 50%,#000 72%,transparent 100%)}
 .glint.mini{margin:-.35em 0 -.35em -.4em;-webkit-mask-image:radial-gradient(ellipse 60% 65% at 50% 50%,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 60% 65% at 50% 50%,#000 70%,transparent 100%)}
-.glint:after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.95) 50%,rgba(255,255,255,0) 100%);mix-blend-mode:overlay;transform:translateX(-160%) skewX(-18deg);animation:glint 3.6s ease-in-out infinite;pointer-events:none}
-.glint:before{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:22%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));mix-blend-mode:screen;transform:translateX(-320%) skewX(-18deg);animation:glint2 3.6s ease-in-out infinite;pointer-events:none;z-index:1}
-@keyframes glint{0%{transform:translateX(-160%) skewX(-18deg)}55%,100%{transform:translateX(330%) skewX(-18deg)}}
-@keyframes glint2{0%{transform:translateX(-320%) skewX(-18deg)}55%,100%{transform:translateX(660%) skewX(-18deg)}}
+.glint:after{content:"";position:absolute;top:-30%;bottom:-30%;left:0;width:38%;background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.35) 35%,rgba(255,255,255,.85) 50%,rgba(255,255,255,.35) 65%,rgba(255,255,255,0) 100%);-webkit-transform:translateX(-150%) skewX(-20deg);transform:translateX(-150%) skewX(-20deg);-webkit-animation:glint 3s ease-in-out infinite;animation:glint 3s ease-in-out infinite;pointer-events:none;z-index:2}
+.glint:before{display:none}
+@-webkit-keyframes glint{0%{-webkit-transform:translateX(-150%) skewX(-20deg)}60%,100%{-webkit-transform:translateX(320%) skewX(-20deg)}}
+@keyframes glint{0%{transform:translateX(-150%) skewX(-20deg)}60%,100%{transform:translateX(320%) skewX(-20deg)}}
 @media (prefers-reduced-motion:reduce){.glint:after,.glint:before{animation:none;display:none}}
 .vid,.vthumb{touch-action:pan-y;-webkit-touch-callout:none}
 .inj{display:grid;grid-template-columns:1fr 1fr;gap:.6em}
