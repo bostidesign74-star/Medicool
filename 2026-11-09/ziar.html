@@ -135,6 +135,15 @@ p{margin:0}
 .vid *,.vthumb *{pointer-events:none}
 .vid.th,.vthumb.th{background-size:cover!important;background-position:center!important}
 .vid.th:before,.vthumb.th:before{background:linear-gradient(180deg,rgba(11,26,85,.15) 0%,rgba(11,26,85,0) 35%,rgba(11,26,85,.75) 100%)!important}
+.glint{position:relative;display:block;overflow:hidden;line-height:0}
+.glint>img{margin:0!important}
+.glint.big{margin:-.6em 0 -.9em;-webkit-mask-image:radial-gradient(ellipse 58% 62% at 50% 50%,#000 72%,transparent 100%);mask-image:radial-gradient(ellipse 58% 62% at 50% 50%,#000 72%,transparent 100%)}
+.glint.mini{margin:-.35em 0 -.35em -.4em;-webkit-mask-image:radial-gradient(ellipse 60% 65% at 50% 50%,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 60% 65% at 50% 50%,#000 70%,transparent 100%)}
+.glint:after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.95) 50%,rgba(255,255,255,0) 100%);mix-blend-mode:overlay;transform:translateX(-160%) skewX(-18deg);animation:glint 3.6s ease-in-out infinite;pointer-events:none}
+.glint:before{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:22%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));mix-blend-mode:screen;transform:translateX(-320%) skewX(-18deg);animation:glint2 3.6s ease-in-out infinite;pointer-events:none;z-index:1}
+@keyframes glint{0%{transform:translateX(-160%) skewX(-18deg)}55%,100%{transform:translateX(330%) skewX(-18deg)}}
+@keyframes glint2{0%{transform:translateX(-320%) skewX(-18deg)}55%,100%{transform:translateX(660%) skewX(-18deg)}}
+@media (prefers-reduced-motion:reduce){.glint:after,.glint:before{animation:none;display:none}}
 .vid,.vthumb{touch-action:pan-y;-webkit-touch-callout:none}
 .inj{display:grid;grid-template-columns:1fr 1fr;gap:.6em}
 .inj .tile{padding:.6em .65em;gap:.3em}
@@ -532,6 +541,12 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   var btn=document.getElementById('sound');
   btn.addEventListener('click',function(e){ e.stopPropagation(); soundOn=!soundOn; btn.classList.toggle('off',!soundOn); btn.setAttribute('aria-label',soundOn?'Sunet pornit':'Sunet oprit'); btn.setAttribute('aria-pressed',soundOn); if(soundOn){ac(); flipSound();} });
 
+  // Efect luminos care trece peste logo (coperta + antetul fiecărei pagini)
+  document.querySelectorAll('img.logoimg, img.minilogo').forEach(function(im){
+    if(im.parentNode.classList&&im.parentNode.classList.contains('glint')) return;
+    var w=document.createElement('span'); w.className='glint '+(im.classList.contains('logoimg')?'big':'mini');
+    im.parentNode.insertBefore(w,im); w.appendChild(im);
+  });
   var pf=new St.PageFlip(document.getElementById('book'),{
     width:W, height:H, size:'stretch', minWidth:240, maxWidth:520, minHeight:456, maxHeight:988,
     usePortrait:true, showCover:false, maxShadowOpacity:0.55, mobileScrollSupport:false,
