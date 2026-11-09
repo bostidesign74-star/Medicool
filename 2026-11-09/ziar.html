@@ -133,6 +133,8 @@ p{margin:0}
 .vid.poster .cap{font-size:.86em}
 .vid.poster .plat{font-size:.52em}
 .vid *,.vthumb *{pointer-events:none}
+.vid.th,.vthumb.th{background-size:cover!important;background-position:center!important}
+.vid.th:before,.vthumb.th:before{background:linear-gradient(180deg,rgba(11,26,85,.15) 0%,rgba(11,26,85,0) 35%,rgba(11,26,85,.75) 100%)!important}
 .vid,.vthumb{touch-action:pan-y;-webkit-touch-callout:none}
 .inj{display:grid;grid-template-columns:1fr 1fr;gap:.6em}
 .inj .tile{padding:.6em .65em;gap:.3em}
@@ -554,6 +556,16 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   })();
 
   // Clipuri: atingere = pornește clipul; culisare = întoarce pagina
+  // Capturi YouTube pe clipurile mari (barele orizontale .vid.sm rămân cu iconiță)
+  (function(){
+    document.querySelectorAll('a.vid:not(.sm), a.vthumb').forEach(function(a){
+      var m=(a.getAttribute('href')||'').match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      if(!m) return;
+      var u='https://i.ytimg.com/vi/'+m[1]+'/hqdefault.jpg', im=new Image();
+      im.onload=function(){ if(im.naturalWidth>120){ a.style.backgroundImage='url("'+u+'")'; a.classList.add('th'); } };
+      im.src=u;
+    });
+  })();
   var KEY='medicool_pag_'+location.pathname;
   function go(url){
     try{ sessionStorage.setItem(KEY, String(pf.getCurrentPageIndex())); }catch(_){}
