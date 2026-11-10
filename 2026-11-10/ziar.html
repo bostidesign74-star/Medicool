@@ -812,7 +812,7 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   function schedStep(c,t,st){
     // doar ticăitul de ceas al știrilor, continuu și liniștit
     var s16=st%16;
-    tick(c,t,(s16%4===0)?0.07:0.035,(s16%4===0)?5000:8000);
+    tick(c,t,(s16%4===0)?0.17:0.085,(s16%4===0)?5000:8000);
   }
   function musicLoop(){ var c=ctx; if(!c||!MUS.playing) return; var sp=60/116/4; while(MUS.next<c.currentTime+0.2){ schedStep(c,MUS.next,MUS.step); MUS.next+=sp; MUS.step++; } }
   function musicStart(){ var c=ac(); if(!c||!MUS.on||MUS.playing) return; if(c.state!=='running') return; MUS.playing=true; var b=mbus(c); b.gain.cancelScheduledValues(c.currentTime); b.gain.setValueAtTime(b.gain.value,c.currentTime); b.gain.linearRampToValueAtTime(0.32,c.currentTime+1.5); MUS.next=c.currentTime+0.08; MUS.timer=setInterval(musicLoop,25); var m=document.getElementById('music'); if(m) m.classList.add('playing'); }
