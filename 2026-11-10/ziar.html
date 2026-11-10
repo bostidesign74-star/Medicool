@@ -533,7 +533,12 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   }
   var mst=null; function master(c){ if(!mst){ mst=c.createDynamicsCompressor(); mst.threshold.value=-14; mst.ratio.value=4; var mg=c.createGain(); mg.gain.value=1.6; mst.connect(mg); mg.connect(c.destination); } return mst; }
   function flipSound(){
-    if(!soundOn) return; var c=ac(); if(!c) return; var t=c.currentTime+0.01;
+    if(!soundOn) return; var c=ac(); if(!c) return;
+    if(c.state!=='running'){ try{ c.resume().then(function(){ playFlip(c); }); }catch(e){} return; }
+    playFlip(c);
+  }
+  function playFlip(c){
+    var t=c.currentTime+0.01;
     // 1. degetele apucă foaia: mototolire scurtă, densă
     layer(c,{t:t,dur:0.16,crack:0.06,f:[[0,3800],[0.16,2600]],q:0.9,env:[[0.012,0.45],[0.16,0.0001]]});
     // 2. foaia mare taie aerul: „whoosh” lung, grav, care urcă și coboară
@@ -546,8 +551,18 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     layer(c,{t:t+0.74,dur:0.2,type:'lowpass',f:[[0,420],[0.2,140]],q:0.8,env:[[0.01,0.8],[0.2,0.0001]]});
     layer(c,{t:t+0.745,dur:0.12,crack:0.03,f:[[0,1300],[0.12,700]],q:1,env:[[0.008,0.4],[0.12,0.0001]]});
   }
-  document.addEventListener('pointerdown',ac,{passive:true});
-  document.addEventListener('touchstart',ac,{passive:true});
+  // Deblocare audio pe iPhone/Android: la primul gest pornim contextul și cântăm un sunet mut
+  var unlocked=false;
+  function unlock(){
+    var c=ac(); if(!c) return;
+    try{ var b=c.createBuffer(1,1,22050), s=c.createBufferSource(); s.buffer=b; s.connect(c.destination); s.start(0); }catch(e){}
+    try{ c.resume(); }catch(e){}
+    if(c.state==='running' && !unlocked){ unlocked=true; }
+  }
+  ['touchstart','touchend','pointerdown','pointerup','mousedown','click','keydown'].forEach(function(ev){
+    window.addEventListener(ev,unlock,{passive:true,capture:true});
+  });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden && ctx && ctx.state!=='running'){ try{ctx.resume();}catch(e){} } });
 
   var btn=document.getElementById('sound');
   btn.addEventListener('click',function(e){ e.stopPropagation(); soundOn=!soundOn; btn.classList.toggle('off',!soundOn); btn.setAttribute('aria-label',soundOn?'Sunet pornit':'Sunet oprit'); btn.setAttribute('aria-pressed',soundOn); if(soundOn){ac(); flipSound();} });
