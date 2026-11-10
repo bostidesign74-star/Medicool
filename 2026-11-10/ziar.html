@@ -133,6 +133,7 @@ p{margin:0}
 .vid.poster .cap{font-size:.86em}
 .vid.poster .plat{font-size:.52em}
 .vid *,.vthumb *{pointer-events:none}
+.hd.novid,.dub.novid{grid-template-columns:1fr!important}
 .vid.th,.vthumb.th{background-size:cover!important;background-position:center!important}
 .vid.th:before,.vthumb.th:before{background:linear-gradient(180deg,rgba(11,26,85,.15) 0%,rgba(11,26,85,0) 35%,rgba(11,26,85,.75) 100%)!important}
 .glint{position:relative;display:block;overflow:hidden;line-height:0}
@@ -579,14 +580,23 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   })();
 
   // Clipuri: atingere = pornește clipul; culisare = întoarce pagina
-  // Capturi YouTube pe clipurile mari (barele orizontale .vid.sm rămân cu iconiță)
+  // Capturi YouTube pe clipurile mari + ascunderea clipurilor private/șterse
   (function(){
-    document.querySelectorAll('a.vid:not(.sm), a.vthumb').forEach(function(a){
-      var m=(a.getAttribute('href')||'').match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-      if(!m) return;
-      var u='https://i.ytimg.com/vi/'+m[1]+'/hqdefault.jpg', im=new Image();
-      im.onload=function(){ if(im.naturalWidth>120){ a.style.backgroundImage='url("'+u+'")'; a.classList.add('th'); } };
-      im.src=u;
+    var RX=/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+    function thumb(id,cb){ var im=new Image(); im.onload=function(){ cb(im.naturalWidth>120); }; im.onerror=function(){ cb(false); }; im.src='https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'; }
+    var links=[].slice.call(document.querySelectorAll('a.vid, a.vthumb, a.btn'));
+    // verificare de control: dacă nici un clip sigur nu se încarcă, rețeaua blochează imaginile și nu ascundem nimic
+    thumb('dQw4w9WgXcQ',function(netOk){
+      links.forEach(function(a){
+        var m=(a.getAttribute('href')||'').match(RX); if(!m) return;
+        thumb(m[1],function(ok){
+          if(ok){ if(!a.classList.contains('sm') && !a.classList.contains('btn')){ a.style.backgroundImage='url("https://i.ytimg.com/vi/'+m[1]+'/hqdefault.jpg")'; a.classList.add('th'); } return; }
+          if(!netOk) return;
+          a.style.display='none'; a.classList.add('gone');
+          var p=a.parentNode; if(p&&(p.classList.contains('hd')||p.classList.contains('dub'))) p.classList.add('novid');
+          var n=a.nextElementSibling; if(n&&n.classList.contains('vidnote')) n.style.display='none';
+        });
+      });
     });
   })();
   var KEY='medicool_pag_'+location.pathname;
