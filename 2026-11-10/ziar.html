@@ -172,6 +172,10 @@ p{margin:0}
 #gate .ghand{display:inline-block;animation:ghand 1.4s ease-in-out infinite}
 @keyframes garr{0%,100%{transform:translateX(4px);opacity:.5}50%{transform:translateX(-6px);opacity:1}}
 @keyframes ghand{0%,100%{transform:translateX(4px)}50%{transform:translateX(-8px)}}
+#gate button.nudge{animation:gatenudge .5s ease-in-out}
+@keyframes gatenudge{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+#sound.blocked{background:#E5394B;opacity:1;animation:sblk 1s ease-in-out infinite}
+@keyframes sblk{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
 @keyframes gatepulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .page:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
   background-image:radial-gradient(circle at center,rgba(11,26,85,.20) 0 34%,transparent 38%),radial-gradient(circle at center,rgba(28,63,168,.12) 0 30%,transparent 34%);
@@ -646,7 +650,7 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   document.addEventListener('visibilitychange',function(){ if(!document.hidden && ctx && ctx.state!=='running'){ try{ctx.resume();}catch(e){} } });
 
   var btn=document.getElementById('sound');
-  btn.addEventListener('click',function(e){ e.stopPropagation(); soundOn=!soundOn; btn.classList.toggle('off',!soundOn); btn.setAttribute('aria-label',soundOn?'Sunet pornit':'Sunet oprit'); btn.setAttribute('aria-pressed',soundOn); if(soundOn){ac(); flipSound();} });
+  btn.addEventListener('click',function(e){ e.stopPropagation(); if(soundOn && (!ctx || ctx.state!=='running')){ unlock(); var c=ac(); try{ c.resume().then(function(){ playFlip(c); }); }catch(_){} btn.classList.remove('blocked'); return; } soundOn=!soundOn; btn.classList.toggle('off',!soundOn); btn.setAttribute('aria-label',soundOn?'Sunet pornit':'Sunet oprit'); btn.setAttribute('aria-pressed',soundOn); if(soundOn){ac(); flipSound();} });
 
   // Efect luminos care trece peste logo (coperta + antetul fiecărei pagini)
   document.querySelectorAll('img.logoimg, img.minilogo').forEach(function(im){
@@ -755,9 +759,11 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     var gs=null;
     g.addEventListener('touchstart',function(e){ var t=e.changedTouches[0]; gs={x:t.clientX,y:t.clientY}; },{passive:true});
     g.addEventListener('touchend',function(e){ var t=e.changedTouches[0], dx=gs?t.clientX-gs.x:0, dy=gs?t.clientY-gs.y:0; gs=null;
-      open(e); if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)){ setTimeout(function(){ if(dx<0) pf.flipNext('bottom'); else pf.flipPrev('bottom'); },60); } },{passive:false});
+      if(Math.abs(dx)>12||Math.abs(dy)>12){ /* culisarea nu deblochează sunetul pe iPhone: cerem o atingere */ if(e.cancelable) e.preventDefault(); var bt=g.querySelector('button'); bt.classList.remove('nudge'); void bt.offsetWidth; bt.classList.add('nudge'); return; }
+      open(e); },{passive:false});
     g.addEventListener('click',open);
   })();
+  setInterval(function(){ var b=document.getElementById('sound'); if(!b) return; var blocked=soundOn && (!ctx || ctx.state!=='running') && !document.getElementById('gate'); b.classList.toggle('blocked',blocked); },700);
   var KEY='medicool_pag_'+location.pathname;
   // Player YouTube în interiorul ziarului (nu mai ieși din Medicool)
   var YRX=/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
