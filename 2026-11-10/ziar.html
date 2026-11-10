@@ -810,20 +810,9 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   var BASS=[0,0,12,0, 0,0,7,0, 0,0,12,0, 0,10,7,5];
   var LEAD=[74,null,null,77, null,76,74,null, 72,null,74,null, null,null,null,null];
   function schedStep(c,t,st){
-    var sp=60/116/4, bar=Math.floor(st/16)%4, s16=st%16, ph=Math.floor(st/64)%2;
-    // ticăitul de ceas al știrilor
+    // doar ticăitul de ceas al știrilor, continuu și liniștit
+    var s16=st%16;
     tick(c,t,(s16%4===0)?0.07:0.035,(s16%4===0)?5000:8000);
-    if(s16===0||s16===8||s16===10) kick(c,t,0.42);
-    if(s16===4||s16===12) tick(c,t,0.12,1800);
-    // bas pulsat
-    var bn=ROOT[bar]+BASS[s16]; tone(c,t,sp*0.9,mnote(bn),'sawtooth',0.10,520+ (s16%4===0?380:0),0.005);
-    // pad
-    if(s16===0){ CH[bar].forEach(function(n){ tone(c,t,sp*16,mnote(n),'sawtooth',0.018,1400,0.35,-7); tone(c,t,sp*16,mnote(n),'sawtooth',0.018,1400,0.35,7); }); }
-    // „lovitura” de titlu, la fiecare 2 măsuri
-    if(s16===0 && bar%2===0){ CH[bar].forEach(function(n){ tone(c,t,0.32,mnote(n+12),'square',0.035,2600,0.004); }); }
-    // motiv scurt în a doua jumătate a frazei
-    if(ph===1){ var ln=LEAD[s16]; if(ln && bar<3) tone(c,t,sp*1.8,mnote(ln+(bar===1?-2:0)),'triangle',0.06,3200,0.01); }
-    if(st%64===60) boom(c,t+sp*2);
   }
   function musicLoop(){ var c=ctx; if(!c||!MUS.playing) return; var sp=60/116/4; while(MUS.next<c.currentTime+0.2){ schedStep(c,MUS.next,MUS.step); MUS.next+=sp; MUS.step++; } }
   function musicStart(){ var c=ac(); if(!c||!MUS.on||MUS.playing) return; if(c.state!=='running') return; MUS.playing=true; var b=mbus(c); b.gain.cancelScheduledValues(c.currentTime); b.gain.setValueAtTime(b.gain.value,c.currentTime); b.gain.linearRampToValueAtTime(0.32,c.currentTime+1.5); MUS.next=c.currentTime+0.08; MUS.timer=setInterval(musicLoop,25); var m=document.getElementById('music'); if(m) m.classList.add('playing'); }
