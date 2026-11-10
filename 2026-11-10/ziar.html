@@ -791,7 +791,7 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   pf.on('changeState',function(e){ if(e.data==='read') setTimeout(placeSound,30); });
   window.addEventListener('resize',function(){ setTimeout(placeSound,80); });
   setTimeout(placeSound,60); setTimeout(placeSound,600);
-  // ---- Muzică de fundal „breaking news” (compusă în cod, originală): 116 BPM, re minor ----
+  // ---- Muzică de fundal „breaking news” (compusă în cod, originală): ceas tic–tac, 70 BPM ----
   var MUS={on:true,playing:false,timer:null,next:0,step:0,bus:null};
   function mbus(c){ if(!MUS.bus){ var g=c.createGain(); g.gain.value=0; var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=9000; g.connect(lp); lp.connect(master(c)); MUS.bus=g; } return MUS.bus; }
   function mnote(f){ return 440*Math.pow(2,(f-69)/12); }
@@ -810,9 +810,8 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   var BASS=[0,0,12,0, 0,0,7,0, 0,0,12,0, 0,10,7,5];
   var LEAD=[74,null,null,77, null,76,74,null, 72,null,74,null, null,null,null,null];
   function schedStep(c,t,st){
-    // doar ticăitul de ceas al știrilor, continuu și liniștit
-    var s16=st%16;
-    tock(c,t,s16%4===0);
+    // ceas liniștit pentru citit: tic–tac alternat, 70 de bătăi pe minut
+    tock(c,t,st%2===0);
   }
   // ticăit mai gros: zgomot filtrat mai jos + un mic „corp” grav, ca un ceas de lemn
   function tock(c,t,acc){
@@ -821,10 +820,10 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     var g=c.createGain(); g.gain.setValueAtTime(acc?0.55:0.28,t); g.gain.exponentialRampToValueAtTime(0.0001,t+(acc?0.05:0.035));
     s.connect(f); f.connect(g); g.connect(mbus(c)); s.start(t); s.stop(t+0.07);
     var o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(acc?190:240,t); o.frequency.exponentialRampToValueAtTime(acc?95:130,t+0.06);
-    var og=c.createGain(); og.gain.setValueAtTime(acc?0.32:0.14,t); og.gain.exponentialRampToValueAtTime(0.0001,t+(acc?0.09:0.05));
+    var og=c.createGain(); og.gain.setValueAtTime(acc?0.16:0.07,t); og.gain.exponentialRampToValueAtTime(0.0001,t+(acc?0.09:0.05));
     o.connect(og); og.connect(mbus(c)); o.start(t); o.stop(t+0.1);
   }
-  function musicLoop(){ var c=ctx; if(!c||!MUS.playing) return; var sp=60/116/4; while(MUS.next<c.currentTime+0.2){ schedStep(c,MUS.next,MUS.step); MUS.next+=sp; MUS.step++; } }
+  function musicLoop(){ var c=ctx; if(!c||!MUS.playing) return; var sp=60/70; while(MUS.next<c.currentTime+0.2){ schedStep(c,MUS.next,MUS.step); MUS.next+=sp; MUS.step++; } }
   function musicStart(){ var c=ac(); if(!c||!MUS.on||MUS.playing) return; if(c.state!=='running') return; MUS.playing=true; var b=mbus(c); b.gain.cancelScheduledValues(c.currentTime); b.gain.setValueAtTime(b.gain.value,c.currentTime); b.gain.linearRampToValueAtTime(0.32,c.currentTime+1.5); MUS.next=c.currentTime+0.08; MUS.timer=setInterval(musicLoop,25); var m=document.getElementById('music'); if(m) m.classList.add('playing'); }
   function musicStop(){ if(!MUS.playing) return; MUS.playing=false; clearInterval(MUS.timer); var c=ctx; if(c&&MUS.bus){ MUS.bus.gain.cancelScheduledValues(c.currentTime); MUS.bus.gain.setValueAtTime(MUS.bus.gain.value,c.currentTime); MUS.bus.gain.linearRampToValueAtTime(0,c.currentTime+0.4); } var m=document.getElementById('music'); if(m) m.classList.remove('playing'); }
   (function(){ var m=document.getElementById('music'); if(!m) return;
