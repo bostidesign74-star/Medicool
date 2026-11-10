@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Medicool · ediții anterioare</title>
+<meta property="og:title" content="Medicool · ediții anterioare">
+<meta property="og:image" content="https://bostidesign74-star.github.io/Medicool/2026-11-11/og.jpg">
+<style>
+:root{--ink:#0B1A55;--muted:#3F557E;--accent:#E0457B}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:linear-gradient(172deg,#E9F9FE 0%,#C6EEFB 38%,#97DCF4 78%,#6FC9EE 100%) fixed;color:var(--ink);font-family:"Archivo","Arial Narrow",Arial,sans-serif;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(rgba(11,26,85,.13) 1px,transparent 1.3px);background-size:5px 5px}
+main{position:relative;max-width:560px;margin:0 auto;padding:22px 18px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.top a{color:var(--ink);text-decoration:none;font-weight:700}
+h1{margin:16px 0 4px;font-size:34px;font-weight:900;letter-spacing:-.01em;line-height:1}
+h1 b{color:var(--accent)}
+p.sub{margin:0 0 16px;font-family:Georgia,serif;color:var(--muted);font-size:15px;border-bottom:3px solid var(--ink);padding-bottom:12px}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+li a{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.86);border:1px solid rgba(11,26,85,.16);border-left:5px solid var(--ink);border-radius:4px;padding:14px 14px;text-decoration:none;color:var(--ink);font-size:18px;font-weight:700}
+li a .d{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:15px;letter-spacing:.02em}
+li a .d s{text-decoration:none;color:var(--muted);font-weight:400}
+li a i{font-style:normal;color:var(--accent);font-size:24px;line-height:1}
+li.azi a{border-left-color:var(--accent)}
+li .tagazi{display:table;margin-top:5px;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 6px;border-radius:2px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a href="../" target="_top">‹ Ediția de azi</a><span>Arhivă</span></div>
+  <h1>Ediții <b>anterioare</b></h1>
+  <p class="sub">Toate numerele ziarului Medicool. Atinge o ediție ca s-o deschizi.</p>
+  <ul id="lista">
+    <!-- LISTA_STATICA (o linie pe ediție, cea mai nouă prima) -->
+    <li data-d="2026-11-11"></li>
+    <li data-d="2026-11-10"></li>
+    <li data-d="2026-11-09"></li>
+  </ul>
+</main>
+<script>
+(function(){
+  var ZILE=['duminică','luni','marți','miercuri','joi','vineri','sâmbătă'];
+  var ul=document.getElementById('lista');
+  function render(dates){
+    dates=dates.filter(function(d,i){ return dates.indexOf(d)===i; }).sort().reverse();
+    ul.innerHTML='';
+    dates.forEach(function(d,i){
+      var p=d.split('-'), dt=new Date(+p[0],+p[1]-1,+p[2]);
+      var li=document.createElement('li'); if(i===0) li.className='azi';
+      li.innerHTML='<a href="../'+d+'/" target="_top"><span class="d">Medicool <s>/</s> '+ZILE[dt.getDay()]+' <s>/</s> '+p[2]+'.'+p[1]+'.'+p[0].slice(2)+(i===0?'<span class="tagazi">ultima ediție</span>':'')+'</span><i>›</i></a>';
+      ul.appendChild(li);
+    });
+  }
+  var stat=[].map.call(ul.querySelectorAll('li[data-d]'),function(li){ return li.getAttribute('data-d'); });
+  render(stat);
+  // completează automat cu toate folderele-ediție din depozit
+  try{
+    fetch('https://api.github.com/repos/bostidesign74-star/Medicool/contents/').then(function(r){ return r.ok?r.json():[]; }).then(function(j){
+      var d=(j||[]).filter(function(x){ return x.type==='dir' && /^\d{4}-\d\d-\d\d$/.test(x.name); }).map(function(x){ return x.name; });
+      if(d.length) render(stat.concat(d));
+    }).catch(function(){});
+  }catch(_){}
+})();
+</script>
+</body>
+</html>
