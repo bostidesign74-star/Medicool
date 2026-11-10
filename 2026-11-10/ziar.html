@@ -825,8 +825,41 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     o.connect(og); og.connect(mbus(c)); o.start(t); o.stop(t+0.14);
   }
   function musicLoop(){ var c=ctx; if(!c||!MUS.playing) return; var sp=60/54; while(MUS.next<c.currentTime+0.2){ schedStep(c,MUS.next,MUS.step); MUS.next+=sp; MUS.step++; } }
-  function musicStart(){ var c=ac(); if(!c||!MUS.on||MUS.playing) return; if(c.state!=='running') return; MUS.playing=true; var b=mbus(c); b.gain.cancelScheduledValues(c.currentTime); b.gain.setValueAtTime(b.gain.value,c.currentTime); b.gain.linearRampToValueAtTime(0.32,c.currentTime+1.5); MUS.next=c.currentTime+0.08; MUS.timer=setInterval(musicLoop,25); var m=document.getElementById('music'); if(m) m.classList.add('playing'); }
-  function musicStop(){ if(!MUS.playing) return; MUS.playing=false; clearInterval(MUS.timer); var c=ctx; if(c&&MUS.bus){ MUS.bus.gain.cancelScheduledValues(c.currentTime); MUS.bus.gain.setValueAtTime(MUS.bus.gain.value,c.currentTime); MUS.bus.gain.linearRampToValueAtTime(0,c.currentTime+0.4); } var m=document.getElementById('music'); if(m) m.classList.remove('playing'); }
+  function synthStart(){ var c=ac(); if(!c||!MUS.on||MUS.playing) return; if(c.state!=='running') return; MUS.playing=true; var b=mbus(c); b.gain.cancelScheduledValues(c.currentTime); b.gain.setValueAtTime(b.gain.value,c.currentTime); b.gain.linearRampToValueAtTime(0.32,c.currentTime+1.5); MUS.next=c.currentTime+0.08; MUS.timer=setInterval(musicLoop,25); var m=document.getElementById('music'); if(m) m.classList.add('playing'); }
+  function synthStop(){ if(!MUS.playing) return; MUS.playing=false; clearInterval(MUS.timer); var c=ctx; if(c&&MUS.bus){ MUS.bus.gain.cancelScheduledValues(c.currentTime); MUS.bus.gain.setValueAtTime(MUS.bus.gain.value,c.currentTime); MUS.bus.gain.linearRampToValueAtTime(0,c.currentTime+0.4); } var m=document.getElementById('music'); if(m) m.classList.remove('playing'); }
+  // ---- Muzică de fundal din YouTube (Wavelayers Music · „Breaking News Intro Background Music”, fără drepturi de autor) ----
+  // Player YouTube ascuns, în buclă. Dacă telefonul nu-l lasă să pornească cu sunet, revine automat la ceasul sintetizat.
+  var BG={id:'93CdqercwSM',vol:35,player:null,ready:false,failed:false,chk:null};
+  function bgInit(){
+    try{
+      var h=document.createElement('div'); h.id='bgmusic'; h.setAttribute('aria-hidden','true');
+      h.style.cssText='position:fixed;left:-9999px;top:0;width:200px;height:120px;opacity:0;pointer-events:none;overflow:hidden';
+      var d=document.createElement('div'); d.id='bgmusic-yt'; h.appendChild(d); document.body.appendChild(h);
+      loadYT().then(function(){
+        BG.player=new YT.Player('bgmusic-yt',{width:200,height:120,videoId:BG.id,host:'https://www.youtube-nocookie.com',
+          playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,playsinline:1,rel:0,modestbranding:1,loop:1,playlist:BG.id,origin:location.origin},
+          events:{
+            onReady:function(){ BG.ready=true; try{ BG.player.setVolume(BG.vol); }catch(_){} if(MUS.playing&&MUS.mode==='yt') bgPlay(); },
+            onStateChange:function(e){ if(e.data===0){ try{ BG.player.seekTo(0,true); BG.player.playVideo(); }catch(_){} } },
+            onError:function(){ bgFail(); }
+          }});
+      });
+    }catch(_){ BG.failed=true; }
+  }
+  function bgPlay(){ try{ BG.player.unMute(); BG.player.setVolume(BG.vol); BG.player.playVideo(); }catch(_){} }
+  function bgFail(){ BG.failed=true; clearTimeout(BG.chk); if(MUS.mode==='yt'){ try{ BG.player.pauseVideo(); }catch(_){} MUS.playing=false; MUS.mode=null; if(MUS.on && !pl) synthStart(); } }
+  function musicStart(){
+    if(!MUS.on||MUS.playing) return;
+    if(BG.failed){ MUS.mode='synth'; synthStart(); return; }
+    MUS.playing=true; MUS.mode='yt'; var m=document.getElementById('music'); if(m) m.classList.add('playing');
+    if(BG.ready) bgPlay();
+    clearTimeout(BG.chk);
+    BG.chk=setTimeout(function(){ if(MUS.mode!=='yt'||!MUS.playing) return; var ok=false; try{ ok=BG.ready && BG.player.getPlayerState()===1 && !BG.player.isMuted(); }catch(_){} if(!ok) bgFail(); },6000);
+  }
+  function musicStop(){
+    if(MUS.mode==='yt'){ clearTimeout(BG.chk); if(!MUS.playing) return; MUS.playing=false; MUS.mode=null; try{ BG.player.pauseVideo(); }catch(_){} var m=document.getElementById('music'); if(m) m.classList.remove('playing'); return; }
+    MUS.mode=null; synthStop();
+  }
   (function(){ var m=document.getElementById('music'); if(!m) return;
     m.addEventListener('click',function(e){ e.stopPropagation(); unlock(); MUS.on=!MUS.on; m.classList.toggle('off',!MUS.on); m.setAttribute('aria-label',MUS.on?'Muzică pornită':'Muzică oprită');
       if(MUS.on){ var c=ac(); try{ (c.state==='running'?Promise.resolve():c.resume()).then(musicStart); }catch(_){} } else musicStop(); });
@@ -875,6 +908,7 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   window.addEventListener('popstate',function(){ if(pl) closePlayer(true); });
   // Subtitrare: română dacă există, altfel engleză, altfel prima disponibilă (ca să se poată urmări și pe mut)
   var ytReady=null;
+  setTimeout(bgInit,0);
   function loadYT(){ if(ytReady) return ytReady; ytReady=new Promise(function(res){
       if(window.YT&&window.YT.Player) return res(); var prev=window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady=function(){ if(prev) try{prev();}catch(_){} res(); };
