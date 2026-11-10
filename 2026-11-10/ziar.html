@@ -141,6 +141,13 @@ p{margin:0}
 #player .pl-bar{font-family:var(--font-mono);font-size:12px;color:#cfe3ff;text-align:center}
 #player .pl-bar a{color:#fff;font-weight:700}
 #player .pl-back{align-self:center;border:0;border-radius:999px;padding:10px 18px;background:#E0457B;color:#fff;font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer}
+.frontcols{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:1;min-height:0}
+.frontcols .fcol{display:flex;flex-direction:column;gap:.45em;padding:.2em .8em .2em 0}
+.frontcols .fcol+.fcol{padding:.2em 0 .2em .8em;border-left:1px solid rgba(11,26,85,.35)}
+.frontcols h2{font-family:var(--font-display);font-stretch:80%;font-weight:800;font-size:1.32em;line-height:1.05;margin:0;color:var(--ink);text-transform:uppercase}
+.frontcols p{font-size:.84em;line-height:1.36;margin:0;color:var(--ink)}
+.frontcols .src{margin-top:auto;color:var(--muted)}
+.index li{cursor:pointer}.index li *{pointer-events:none}
 .hd.novid,.dub.novid{grid-template-columns:1fr!important}
 .vid.th,.vthumb.th{background-size:cover!important;background-position:center!important}
 .vid.th:before,.vthumb.th:before{background:linear-gradient(180deg,rgba(11,26,85,.15) 0%,rgba(11,26,85,0) 35%,rgba(11,26,85,.75) 100%)!important}
@@ -206,12 +213,20 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     <div class="tag">Medicină, gătit sănătos și experimente: ce a fost extraordinar în ultimele zile.</div>
   </header>
   <div class="grow">
-    <article class="tile lead">
-      <span class="kicker">Cazul zilei · New York</span>
-      <h2>Tristețe doar în clipa alăptării</h2>
-      <p>O mamă se simțea fără speranță cu un minut înainte de fiecare „coborâre” a laptelui, de circa cinci ori pe zi, apoi senzația dispărea. În rest era fericită. Numele dat: reflex disforic de ejecție a laptelui (D-MER), legat probabil de dopamină. Ar afecta circa 14% dintre mamele care alăptează.<a class="more" href="https://www.livescience.com/health/diagnostic-dilemma-mom-experienced-extreme-unhappiness-only-when-she-breastfed" target="_blank" rel="noopener">Mai mult ›</a></p>
-      <span class="src">Live Science · International Breastfeeding Journal</span>
-    </article>
+    <div class="frontcols">
+      <article class="fcol">
+        <span class="kicker">Cazul zilei · New York</span>
+        <h2>Tristețe doar în clipa alăptării</h2>
+        <p>O mamă se simțea fără speranță cu un minut înainte de fiecare „coborâre” a laptelui, de circa cinci ori pe zi, apoi senzația dispărea. Numele: reflex disforic de ejecție a laptelui (D-MER), legat probabil de dopamină. Ar afecta circa 14% dintre mamele care alăptează.<a class="more" href="https://www.livescience.com/health/diagnostic-dilemma-mom-experienced-extreme-unhappiness-only-when-she-breastfed" target="_blank" rel="noopener">Mai mult ›</a></p>
+        <span class="src">Live Science · Int. Breastfeeding Journal</span>
+      </article>
+      <article class="fcol">
+        <span class="kicker">Speranță · UCSF</span>
+        <h2>CAR-T care se activează doar în creier</h2>
+        <p>Celulele B-SYNC recunosc o proteină din creier și abia acolo atacă glioamele difuze ale copiilor. La două modele de șoareci cu tumori umane, cancerul a dispărut la toate animalele. Testele pe oameni ar putea începe în 2027.<a class="more" href="https://www.sciencedaily.com/releases/2026/11/261104084009.htm" target="_blank" rel="noopener">Mai mult ›</a></p>
+        <span class="src">Science Transl. Medicine · pag. 2</span>
+      </article>
+    </div>
     <a class="vid sm" href="https://www.youtube.com/watch?v=voeNpxu7wHg" target="_blank" rel="noopener"><span class="play"></span><span class="cap"><span class="plat">▶ YouTube · podcast medical</span><br>Alia Macrina Heise, mama din studiu, explică D-MER</span></a>
     <div class="tile"><span class="kicker">În acest număr</span>
         <ul class="index cols2">
@@ -624,6 +639,18 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
       });
     });
   })();
+  // Cuprins: atingi un titlu și ajungi direct pe pagina lui
+  document.querySelectorAll('.index li').forEach(function(li){
+    var sp=li.querySelector('span'); var n=sp?parseInt(sp.textContent,10):NaN; if(!(n>0)) return;
+    var st=null;
+    li.addEventListener('touchstart',function(e){ var t=e.changedTouches[0]; st={x:t.clientX,y:t.clientY}; ac(); e.stopPropagation(); },{passive:true});
+    li.addEventListener('touchend',function(e){ if(!st) return; var t=e.changedTouches[0], dx=t.clientX-st.x, dy=t.clientY-st.y; st=null; e.stopPropagation();
+      if(Math.abs(dx)>25 && Math.abs(dx)>Math.abs(dy)){ if(e.cancelable) e.preventDefault(); if(dx<0) pf.flipNext('bottom'); else pf.flipPrev('bottom'); return; }
+      if(Math.abs(dx)<10 && Math.abs(dy)<10){ if(e.cancelable) e.preventDefault(); pf.flip(n-1,'bottom'); } },{passive:false});
+    li.addEventListener('mousedown',function(e){ e.stopPropagation(); });
+    li.addEventListener('mouseup',function(e){ e.stopPropagation(); });
+    li.addEventListener('click',function(e){ e.stopPropagation(); pf.flip(n-1,'bottom'); });
+  });
   var KEY='medicool_pag_'+location.pathname;
   // Player YouTube în interiorul ziarului (nu mai ieși din Medicool)
   var YRX=/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
