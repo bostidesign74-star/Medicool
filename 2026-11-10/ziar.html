@@ -904,15 +904,28 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
       var sc=document.createElement('script'); sc.src='https://www.youtube.com/iframe_api'; document.head.appendChild(sc); }); return ytReady; }
   function setupCaptions(fr){
     loadYT().then(function(){
-      var tries=0;
-      function pick(p){
+      var done=false, tries=0, base=null;
+      function find(list,code,asr){ for(var i=0;i<list.length;i++){ var t=list[i], lc=(t.languageCode||'').toLowerCase(); if(lc.indexOf(code)===0 && (asr===undefined || ((t.kind||'')==='asr')===asr)) return t; } return null; }
+      function copy(o){ var r={}; for(var k in o) r[k]=o[k]; return r; }
+      function apply(p){
+        if(done) return;
         var list=[]; try{ list=p.getOption('captions','tracklist')||[]; }catch(_){}
-        if(!list.length){ if(++tries<12) return setTimeout(function(){ pick(p); },700); return; }
-        function has(code){ for(var i=0;i<list.length;i++){ if((list[i].languageCode||'').toLowerCase().indexOf(code)===0) return list[i]; } return null; }
-        var t=has('ro')||has('en')||list[0];
-        try{ p.setOption('captions','track',{languageCode:t.languageCode}); }catch(_){}
+        if(!list.length){ try{ p.loadModule('captions'); }catch(_){} if(++tries<60) setTimeout(function(){ apply(p); },700); return; }
+        done=true;
+        // 1) subtitrare română (manuală, apoi automată); 2) altfel engleză/prima pistă tradusă automat în română
+        var ro=find(list,'ro',false)||find(list,'ro',true), opt;
+        base=find(list,'en',false)||find(list,'en',true)||list[0];
+        if(ro){ opt=copy(ro); } else { opt=copy(base); opt.translationLanguage={languageCode:'ro',languageName:'Română'}; }
+        try{ p.setOption('captions','reload',true); }catch(_){}
+        try{ p.setOption('captions','track',opt); }catch(_){}
+        // dacă traducerea automată nu e acceptată, rămâne măcar subtitrarea originală
+        setTimeout(function(){ var cur={}; try{ cur=p.getOption('captions','track')||{}; }catch(_){} if(!cur.languageCode){ try{ p.setOption('captions','track',copy(ro||base)); }catch(_){} } },1800);
       }
-      try{ new YT.Player(fr,{events:{ onApiChange:function(e){ pick(e.target); }, onReady:function(e){ try{ e.target.loadModule('captions'); }catch(_){} setTimeout(function(){ pick(e.target); },1200); } }}); }catch(_){}
+      try{ new YT.Player(fr,{events:{
+        onReady:function(e){ try{ e.target.loadModule('captions'); }catch(_){} setTimeout(function(){ apply(e.target); },800); },
+        onApiChange:function(e){ apply(e.target); },
+        onStateChange:function(e){ if(e.data===1){ done=false; tries=0; setTimeout(function(){ apply(e.target); },400); } }
+      }}); }catch(_){}
     });
   }
   function go(url){
