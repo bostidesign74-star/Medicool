@@ -636,15 +636,35 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     closePlayer(true);
     pl=document.createElement('div'); pl.id='player';
     pl.innerHTML='<div class="pl-box"><button type="button" class="pl-x" aria-label="Închide">✕</button>'+
-      '<div class="pl-frame"><iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&playsinline=1&rel=0&modestbranding=1&cc_load_policy=1&cc_lang_pref=ro&hl=ro" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>'+
+      '<div class="pl-frame"><iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&playsinline=1&rel=0&modestbranding=1&cc_load_policy=1&cc_lang_pref=ro&hl=ro&enablejsapi=1&origin='+encodeURIComponent(location.origin)+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>'+
       '<div class="pl-bar"><span>Nu pornește? </span><a class="pl-yt" href="'+url+'" target="_blank" rel="noopener">Deschide în YouTube ↗</a></div>'+
       '<button type="button" class="pl-back">‹ Înapoi la Medicool</button></div>';
     document.body.appendChild(pl);
+    setupCaptions(pl.querySelector('iframe'));
     ['touchstart','touchmove','touchend','pointerdown','mousedown'].forEach(function(ev){ pl.addEventListener(ev,function(e){ e.stopPropagation(); },{passive:true}); });
     pl.addEventListener('click',function(e){ if(e.target===pl||e.target.classList.contains('pl-x')||e.target.classList.contains('pl-back')) closePlayer(false); });
     try{ history.pushState({mcPlayer:1},''); }catch(_){}
   }
   window.addEventListener('popstate',function(){ if(pl) closePlayer(true); });
+  // Subtitrare: română dacă există, altfel engleză, altfel prima disponibilă (ca să se poată urmări și pe mut)
+  var ytReady=null;
+  function loadYT(){ if(ytReady) return ytReady; ytReady=new Promise(function(res){
+      if(window.YT&&window.YT.Player) return res(); var prev=window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady=function(){ if(prev) try{prev();}catch(_){} res(); };
+      var sc=document.createElement('script'); sc.src='https://www.youtube.com/iframe_api'; document.head.appendChild(sc); }); return ytReady; }
+  function setupCaptions(fr){
+    loadYT().then(function(){
+      var tries=0;
+      function pick(p){
+        var list=[]; try{ list=p.getOption('captions','tracklist')||[]; }catch(_){}
+        if(!list.length){ if(++tries<12) return setTimeout(function(){ pick(p); },700); return; }
+        function has(code){ for(var i=0;i<list.length;i++){ if((list[i].languageCode||'').toLowerCase().indexOf(code)===0) return list[i]; } return null; }
+        var t=has('ro')||has('en')||list[0];
+        try{ p.setOption('captions','track',{languageCode:t.languageCode}); }catch(_){}
+      }
+      try{ new YT.Player(fr,{events:{ onApiChange:function(e){ pick(e.target); }, onReady:function(e){ try{ e.target.loadModule('captions'); }catch(_){} setTimeout(function(){ pick(e.target); },1200); } }}); }catch(_){}
+    });
+  }
   function go(url){
     try{ sessionStorage.setItem(KEY, String(pf.getCurrentPageIndex())); }catch(_){}
     var own=/github\.io$/.test(location.hostname)||location.protocol==='file:';
