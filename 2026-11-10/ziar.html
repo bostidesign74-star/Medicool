@@ -3,6 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>/* aplicația de pe ecranul telefonului: ziarul se deschide direct (fără ramă), cu sunet, și trece singur la ediția nouă */
+(function(){ if(!/[?&]app=1/.test(location.search)) return;
+  document.documentElement.className+=' app';
+  var v=document.querySelector('meta[name=viewport]'); if(v) v.setAttribute('content','width=device-width,initial-scale=1,viewport-fit=cover');
+  var D=(location.pathname.match(/(\d{4}-\d\d-\d\d)\//)||[])[1];
+  function chk(){ if(/[?&]arh=1/.test(location.search)) return; try{ fetch('../?nc='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){ var n=t.match(/"(\d{4}-\d\d-\d\d)\/ziar\.html/); if(n&&D&&n[1]!==D) location.replace('../'+n[1]+'/ziar.html?app=1'); }).catch(function(){}); }catch(_){} }
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) chk(); });
+  window.addEventListener('pageshow',function(e){ if(e.persisted) chk(); });
+  setInterval(function(){ if(!document.hidden) chk(); },1800000);
+})();</script>
+
 <title>Medicool · ediție de probă</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap">
 <style>
@@ -255,6 +266,7 @@ p{margin:0}
 #qnav .qlab.v{opacity:1}
 #qnav .qlab b{color:#FF9EC0;margin-right:6px}
 #qnav .qlogo{position:absolute;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 24%,#000 80%,transparent 100%),linear-gradient(to right,transparent 0,#000 12%,#000 95%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to bottom,transparent 0,#000 24%,#000 80%,transparent 100%),linear-gradient(to right,transparent 0,#000 12%,#000 95%,transparent 100%);mask-composite:intersect;display:block;height:auto}
+html.app,html.app body{background:#0B1A55}html.app body{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 </style>
 </head>
 <body>
@@ -650,6 +662,7 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   var stage=document.getElementById('stage');
   function fit(){
     var vw=window.innerWidth, vh=window.innerHeight;
+    if(document.documentElement.classList.contains('app')){ var cs=getComputedStyle(document.body); vh-=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0); }
     var w=Math.min(vw,560), h=vh;
     stage.style.width=w+'px'; stage.style.height=h+'px';
     document.documentElement.style.setProperty('--fs',(Math.min(w/W,h/H)*14.2)+'px');

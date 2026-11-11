@@ -43,13 +43,14 @@ li .tagazi{display:table;margin-top:5px;font-family:"IBM Plex Mono",monospace;fo
 (function(){
   var ZILE=['duminică','luni','marți','miercuri','joi','vineri','sâmbătă'];
   var ul=document.getElementById('lista');
+  var APP=!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
   function render(dates){
     dates=dates.filter(function(d,i){ return dates.indexOf(d)===i; }).sort().reverse();
     ul.innerHTML='';
     dates.forEach(function(d,i){
       var p=d.split('-'), dt=new Date(+p[0],+p[1]-1,+p[2]);
       var li=document.createElement('li'); if(i===0) li.className='azi';
-      li.innerHTML='<a href="../'+d+'/" target="_top"><span class="d">Medicool <s>/</s> '+ZILE[dt.getDay()]+' <s>/</s> '+p[2]+'.'+p[1]+'.'+p[0].slice(2)+(i===0?'<span class="tagazi">ultima ediție</span>':'')+'</span><i>›</i></a>';
+      li.innerHTML='<a href="../'+d+(APP?'/ziar.html?app=1'+(i?'&arh=1':''):'/')+'" target="_top"><span class="d">Medicool <s>/</s> '+ZILE[dt.getDay()]+' <s>/</s> '+p[2]+'.'+p[1]+'.'+p[0].slice(2)+(i===0?'<span class="tagazi">ultima ediție</span>':'')+'</span><i>›</i></a>';
       ul.appendChild(li);
     });
   }
