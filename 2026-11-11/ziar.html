@@ -693,7 +693,10 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   }
   // Deblocare audio pe iPhone/Android: la primul gest pornim contextul și cântăm un sunet mut
   var unlocked=false;
-  function unlock(){
+  // iPhone: sunetul să se audă și când telefonul e pe silențios (mai ales în aplicația de pe ecranul principal)
+  function audioSess(){ try{ if(navigator.audioSession && navigator.audioSession.type!=='playback') navigator.audioSession.type='playback'; }catch(_){} }
+  audioSess();
+  function unlock(){ audioSess();
     var c=ac(); if(!c) return;
     try{ var b=c.createBuffer(1,1,22050), s=c.createBufferSource(); s.buffer=b; s.connect(c.destination); s.start(0); }catch(e){}
     try{ c.resume(); }catch(e){}
