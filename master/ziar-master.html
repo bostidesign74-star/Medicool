@@ -769,7 +769,7 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
 
   // ---- sunet de pagină întoarsă (sintetizat, fără fișiere) ----
   var ctx=null, soundOn=true;
-  function ac(){ if(!ctx){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(ctx&&ctx.state==='suspended'){ try{ctx.resume();}catch(e){} } return ctx; }
+  function ac(){ if(!ctx){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(ctx&&ctx.state!=='running'&&ctx.state!=='closed'){ try{ctx.resume();}catch(e){} } return ctx; }
   // ---- foaie mare de ziar întoarsă: apucat, foșnet lung de aer, fâlfâit, crăpături, așezare ----
   function noiseBuf(c,dur,crack){ var n=Math.floor(c.sampleRate*dur), b=c.createBuffer(1,n,c.sampleRate), d=b.getChannelData(0), last=0;
     for(var i=0;i<n;i++){ var w=Math.random()*2-1; last=last*0.6+w*0.4; var k=Math.random()<crack?(Math.random()*2-1)*2.2:0; d[i]=last*0.9+k; } return b; }
@@ -955,13 +955,21 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
   function synthStop(){ if(!MUS.playing) return; MUS.playing=false; clearInterval(MUS.timer); var c=ctx; if(c&&MUS.bus){ MUS.bus.gain.cancelScheduledValues(c.currentTime); MUS.bus.gain.setValueAtTime(MUS.bus.gain.value,c.currentTime); MUS.bus.gain.linearRampToValueAtTime(0,c.currentTime+0.4); } var m=document.getElementById('music'); if(m) m.classList.remove('playing'); }
   // ---- Muzică de fundal: „Breaking News 3” de Sascha Ende (ende.app), licență CC BY 4.0 ----
   // Fișier găzduit pe GitHub Pages, în buclă, prin aceeași cale de volum ca restul sunetelor. Dacă nu se încarcă, revine la ceasul sintetizat.
-  var BG={src:'https://bostidesign74-star.github.io/Medicool/audio/breaking-news-3-sascha-ende.mp3',vol:0.45,el:null,node:null,failed:false,off:null};
+  var BG={src:'https://bostidesign74-star.github.io/Medicool/audio/breaking-news-3-sascha-ende.mp3',vol:0.45,el:null,node:null,failed:false,off:null,buf:null,loading:null,srcN:null,noBuf:false};
+  // iPhone (mai ales aplicația de pe ecranul principal): melodia e decodată și cântată direct prin Web Audio, nu printr-un element <audio>
+  function bgLoad(c){ if(BG.buf||BG.loading||BG.noBuf) return BG.loading; try{ BG.loading=fetch(BG.src).then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(function(ab){ return new Promise(function(ok,ko){ var p=c.decodeAudioData(ab,ok,ko); if(p&&p.then) p.then(ok,ko); }); }).then(function(b){ BG.buf=b; return b; }).catch(function(){ BG.noBuf=true; BG.loading=null; }); }catch(_){ BG.noBuf=true; } return BG.loading; }
+  function bufStart(c){ var m=document.getElementById('music'); try{ if(BG.srcN){ try{BG.srcN.stop();}catch(_){} } var s=c.createBufferSource(); s.buffer=BG.buf; s.loop=true; s.connect(mbus(c)); s.start(0); BG.srcN=s; }catch(_){ BG.noBuf=true; MUS.playing=false; MUS.mode=null; if(m) m.classList.remove('playing'); return; } var g=MUS.bus.gain, t=c.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(BG.vol,t+1.5); }
   function bgEl(){ if(!BG.el){ var a=new Audio(); a.crossOrigin='anonymous'; a.loop=true; a.preload='auto'; a.setAttribute('playsinline',''); a.addEventListener('error',function(){ bgFail(); }); a.src=BG.src; BG.el=a; } return BG.el; }
   function bgFail(){ BG.failed=true; if(MUS.mode==='file'){ try{ BG.el.pause(); }catch(_){} MUS.playing=false; MUS.mode=null; if(MUS.on && !pl) synthStart(); } }
   function musicStart(){
     if(!MUS.on||MUS.playing) return;
     if(BG.failed){ MUS.mode='synth'; synthStart(); return; }
-    var c=ac(), a=bgEl(); clearTimeout(BG.off);
+    var c=ac(); clearTimeout(BG.off);
+    if(c && !BG.noBuf){ var m0=document.getElementById('music'); MUS.playing=true; MUS.mode='buf'; if(m0) m0.classList.add('playing');
+      if(BG.buf){ bufStart(c); return; }
+      var L=bgLoad(c); if(L){ L.then(function(){ if(MUS.mode==='buf' && MUS.playing && BG.buf){ bufStart(c); } else if(MUS.mode==='buf' && MUS.playing){ MUS.playing=false; MUS.mode=null; musicStart(); } }); return; }
+      MUS.playing=false; MUS.mode=null; }
+    var a=bgEl();
     if(c && !BG.node){ try{ BG.node=c.createMediaElementSource(a); BG.node.connect(mbus(c)); }catch(_){ BG.node=null; } }
     MUS.playing=true; MUS.mode='file'; var m=document.getElementById('music'); if(m) m.classList.add('playing');
     if(BG.node && MUS.bus){ var g=MUS.bus.gain, t=c.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(BG.vol,t+1.5); }
@@ -970,6 +978,9 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     if(p && p.catch) p.catch(function(e){ if(e && e.name==='NotAllowedError'){ MUS.playing=false; MUS.mode=null; if(m) m.classList.remove('playing'); } else bgFail(); });
   }
   function musicStop(){
+    if(MUS.mode==='buf'){ MUS.playing=false; MUS.mode=null; var mb=document.getElementById('music'); if(mb) mb.classList.remove('playing');
+      var cb=ctx; if(cb && MUS.bus){ var gb=MUS.bus.gain, tb=cb.currentTime; gb.cancelScheduledValues(tb); gb.setValueAtTime(gb.value,tb); gb.linearRampToValueAtTime(0,tb+0.4); }
+      clearTimeout(BG.off); BG.off=setTimeout(function(){ if(!MUS.playing && BG.srcN){ try{ BG.srcN.stop(); }catch(_){} BG.srcN=null; } },450); return; }
     if(MUS.mode==='file'){ if(!MUS.playing) return; MUS.playing=false; MUS.mode=null; var m=document.getElementById('music'); if(m) m.classList.remove('playing');
       var c=ctx; if(c && BG.node && MUS.bus){ var g=MUS.bus.gain, t=c.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(0,t+0.4); }
       clearTimeout(BG.off); BG.off=setTimeout(function(){ if(!MUS.playing) try{ BG.el.pause(); }catch(_){} },450); return; }
