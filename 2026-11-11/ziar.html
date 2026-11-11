@@ -267,6 +267,15 @@ p{margin:0}
 #qnav .qlab b{color:#FF9EC0;margin-right:6px}
 #qnav .qlogo{position:absolute;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 24%,#000 80%,transparent 100%),linear-gradient(to right,transparent 0,#000 12%,#000 95%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to bottom,transparent 0,#000 24%,#000 80%,transparent 100%),linear-gradient(to right,transparent 0,#000 12%,#000 95%,transparent 100%);mask-composite:intersect;display:block;height:auto}
 html.app,html.app body{background:#0B1A55}html.app body{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+/* coperta: în locul cuprinsului, fotografia echipei și anunțul sezonului 11 (cuprinsul rămâne ascuns, îl folosește meniul cu raze) */
+.page.cover .tile.tochide{display:none}
+.tile.s11{flex:1 1 auto;min-height:6em;display:flex;flex-direction:column;gap:.35em;padding:.45em}
+.tile.s11 .s11ph{display:block;flex:1 1 auto;min-height:0;margin:0;position:relative;overflow:hidden;border-radius:4px;white-space:normal}
+.tile.s11 .s11ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
+.tile.s11 .s11k{position:absolute;left:.45em;top:.45em;z-index:2;margin:0}
+.tile.s11 .s11t{flex:none;display:flex;align-items:baseline;justify-content:space-between;gap:.6em;padding:0 .2em .1em}
+.tile.s11 .s11t h3{margin:0;font-family:var(--font-display);font-weight:900;font-size:1.15em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.s11 .s11t .more{flex:none;margin:0 0 .1em}
 </style>
 </head>
 <body>
@@ -305,7 +314,11 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
       <div class="qopts"><button type="button" class="qopt" data-k="a">1 din 10</button><button type="button" class="qopt" data-k="b">1 din 4</button><button type="button" class="qopt" data-k="c">1 din 2</button></div>
       <p class="qexp"><b>Răspuns: 1 din 4</b>, adică circa 240 de milioane de adolescenți, arată datele OMS din 140 de țări (pag. 11).</p>
     </div>
-    <div class="tile"><span class="kicker">În acest număr</span>
+    <div class="tile s11">
+      <a class="more s11ph" href="https://bostidesign74-star.github.io/Medicool/sezon11/" target="_blank" rel="noopener"><span class="kicker s11k">În curând · MediCOOL sezonul 11</span><img src="https://bostidesign74-star.github.io/Medicool/sezon11/echipa.jpg" alt="Echipa MediCOOL în platou"></a>
+      <div class="s11t"><h3>Medicina devine spectacol</h3><a class="more" href="https://bostidesign74-star.github.io/Medicool/sezon11/" target="_blank" rel="noopener">Mai mult ›</a></div>
+    </div>
+    <div class="tile tochide"><span class="kicker">În acest număr</span>
         <ul class="index cols2">
           <li>Politica medicală<span>2</span></li><li>Laborator<span>3</span></li><li>Descoperiri<span>4</span></li><li>Pe cifre<span>5</span></li><li>Viral pe TikTok<span>6</span></li><li>Știri îndoielnice<span>7</span></li><li>Rețeta zilei<span>8</span></li><li>Experimentul<span>9</span></li><li>Cinema medical<span>10</span></li><li>Sport<span>11</span></li><li>Meteo<span>12</span></li><li>Știați că?<span>13</span></li><li>Surse<span>14</span></li>
         </ul>
