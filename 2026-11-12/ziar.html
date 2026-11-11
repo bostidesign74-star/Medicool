@@ -1274,6 +1274,43 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     pf.on('flip',function(){ setTimeout(all,30); }); pf.on('changeState',function(){ setTimeout(all,30); });
   })();
 
+
+  // Încadrare automată: pe orice telefon, conținutul fiecărei pagini se micșorează puțin (doar zona de știri),
+  // ca să nu treacă niciodată de linia subsolului „Medicool · N/17”. Antetul și subsolul rămân identice pe toate paginile.
+  (function(){
+    function over(g){
+      // în copie, blocurile nu au voie să se strângă: se măsoară înălțimea lor naturală
+      var gb=g.getBoundingClientRect().bottom, k=g.children, m=0;
+      for(var i=0;i<k.length;i++){ var c=k[i]; if(getComputedStyle(c).display==='none') continue;
+        var b=c.getBoundingClientRect().bottom; if(b>m) m=b; }
+      return m>gb+1;
+    }
+    function fitAll(){
+      var pages=document.querySelectorAll('#book .page'); if(!pages.length) return;
+      var box=document.createElement('div');
+      box.style.cssText='position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;width:'+PW+'px;height:'+PH+'px;overflow:hidden';
+      document.body.appendChild(box);
+      for(var i=0;i<pages.length;i++){
+        var og=pages[i].querySelector('.pg>.grow'); if(!og) continue;
+        var cl=pages[i].cloneNode(true); cl.removeAttribute('style');
+        cl.style.cssText='position:absolute;left:0;top:0;display:block;width:'+PW+'px;height:'+PH+'px;transform:none';
+        box.appendChild(cl);
+        var g=cl.querySelector('.pg>.grow'), f=1; g.style.fontSize='1em'; g.style.justifyContent='flex-start'; for(var j=0;j<g.children.length;j++){ var ch=g.children[j]; if(!/(^|\s)(vid|vthumb|vwrap)(\s|$)/.test(ch.className)&&!ch.querySelector(':scope>a.vid:only-child')) ch.style.flexShrink='0'; }
+        while(f>0.72 && over(g)){ f=Math.round((f-0.02)*100)/100; g.style.fontSize=f+'em'; }
+        og.style.fontSize=f<1?(f+'em'):'';
+        box.removeChild(cl);
+      }
+      document.body.removeChild(box);
+    }
+    function later(){ setTimeout(function(){ try{ fitAll(); }catch(_){} },160); }
+    try{ fitAll(); }catch(_){}
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(later);
+    window.addEventListener('load',later);
+    window.addEventListener('resize',later);
+    window.addEventListener('orientationchange',later);
+    setTimeout(later,1200);
+  })();
+
   var hint=document.getElementById('hint');
   pf.on('changeState',function(e){ if(e.data==='flipping'){ flipSound(); hint.style.opacity='0'; } });
   window.addEventListener('resize',function(){ fit(); try{ pf.update(); }catch(e){} });
