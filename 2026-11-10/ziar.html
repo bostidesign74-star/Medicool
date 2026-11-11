@@ -244,6 +244,21 @@ p{margin:0}
 #hint{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#cfd5de;opacity:.85;pointer-events:none;transition:opacity .6s;white-space:nowrap}
 .more{display:inline-block;margin-left:.35em;font-family:var(--font-mono);font-size:.78em;font-weight:700;letter-spacing:.02em;color:var(--accent);text-decoration:none;white-space:nowrap}.more *{pointer-events:none}
 #sound{position:fixed;left:0;top:0;width:14px;height:14px;padding:0;border:0;border-radius:50%;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;color:#fff;background:#22B45A;opacity:.6;box-shadow:none;-webkit-tap-highlight-color:transparent;transition:background .2s,opacity .2s}#sound:before{content:"";position:absolute;inset:-12px;border-radius:50%}#sound.off{background:#E5394B}#sound svg{width:72%;height:72%;display:block;pointer-events:none}#sound .x{display:none}#sound.off .x{display:inline}#sound.off .w{display:none}
+/* cuprins rapid: ții apăsat oriunde, culisezi pe cotoare, ridici degetul */
+#qnav{position:fixed;left:0;right:0;bottom:0;height:52%;z-index:60;display:none;flex-direction:column;background:linear-gradient(180deg,rgba(11,26,85,.78) 0%,rgba(11,26,85,.9) 100%);border-radius:14px 14px 0 0;box-shadow:0 -8px 24px rgba(11,26,85,.35);padding:0 6px calc(6px + env(safe-area-inset-bottom));pointer-events:none;-webkit-touch-callout:none}
+#qnav.on{display:flex;animation:qnIn .18s ease-out}
+@keyframes qnIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+#qnav .qlab{flex:none;text-align:center;font-family:var(--font-display);font-weight:800;font-size:22px;color:#fff;padding:12px 6px 8px;text-shadow:0 2px 8px rgba(0,0,0,.35);min-height:1.2em}
+#qnav .qlab small{display:block;font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#AFC2EA;margin-bottom:2px}
+#qnav .qrow{flex:1;display:flex;align-items:stretch;gap:2px;min-height:0}
+#qnav .qs{flex:1 1 0;min-width:0;position:relative;display:flex;align-items:flex-end;justify-content:center;padding:6px 0;border-radius:4px 4px 2px 2px;background:#F4FBFE;color:#0B1A55;border-top:4px solid #97DCF4;overflow:hidden;transition:flex-grow .12s ease-out,background .12s,transform .12s}
+#qnav .qs:nth-child(odd){background:#E3F4FC}
+#qnav .qs span{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;line-height:1}
+#qnav .qs b{position:absolute;top:5px;left:0;right:0;text-align:center;font-family:var(--font-mono);font-size:9px;font-weight:700;color:#3F557E}
+#qnav .qs.cur{border-top-color:#0B1A55}
+#qnav .qs.act{background:#E0457B;color:#fff;border-top-color:#fff;transform:translateY(-10px)}
+#qnav .qs.act b{color:#fff}
+#qnav .qs.act span{font-size:15px}
 </style>
 </head>
 <body>
@@ -963,6 +978,63 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     a.addEventListener('mouseup',function(e){ end(e.clientX,e.clientY,e); e.stopPropagation(); });
     a.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); if(moved){ moved=false; return; } go(a.href); });
   });
+
+  // Cuprins rapid: ținând apăsat ~0,45 s oriunde apar pe jumătatea de jos cotoarele tuturor paginilor;
+  // culisezi degetul peste ele (cel de sub deget se mărește) și când ridici degetul se deschide pagina aceea.
+  (function(){
+    var titles=['Pagina principală'], idx=[0];
+    document.querySelectorAll('.page:first-child .index li, .page.cover .index li').forEach(function(li){
+      var sp=li.querySelector('span'); var n=sp?parseInt(sp.textContent,10):NaN; if(!(n>0)) return;
+      var t=''; li.childNodes.forEach(function(c){ if(c.nodeType===3) t+=c.textContent; }); t=t.trim(); if(!t) return;
+      titles.push(t); idx.push(n-1);
+    });
+    if(titles.length<2) return;
+    var q=document.createElement('div'); q.id='qnav';
+    q.innerHTML='<div class="qlab"><small>Ridică degetul ca să deschizi</small><span></span></div><div class="qrow"></div>';
+    var row=q.querySelector('.qrow'), lab=q.querySelector('.qlab span');
+    titles.forEach(function(t,i){ var s=document.createElement('div'); s.className='qs'; s.innerHTML='<b>'+(idx[i]+1)+'</b><span>'+t+'</span>'; row.appendChild(s); });
+    document.body.appendChild(q);
+    var strips=[].slice.call(row.children);
+    var timer=null, sx=0, sy=0, on=false, act=-1;
+    function grow(x){
+      var r=row.getBoundingClientRect(), inRow=x>=r.left&&x<=r.right;
+      var w=r.width/strips.length, k=inRow?Math.max(0,Math.min(strips.length-1,Math.floor((x-r.left)/w))):-1;
+      strips.forEach(function(s,i){ var d=k<0?9:Math.abs(i-k); s.style.flexGrow=d===0?4.2:d===1?2.2:d===2?1.4:1; s.classList.toggle('act',i===k); });
+      if(k!==act){ act=k; lab.textContent=k<0?'':titles[k]; if(k>=0&&navigator.vibrate){ try{ navigator.vibrate(8); }catch(_){} } }
+    }
+    function open(x,y){
+      on=true; act=-2; var cur=pf.getCurrentPageIndex();
+      strips.forEach(function(s,i){ s.classList.toggle('cur',idx[i]===cur); });
+      q.classList.add('on'); grow(x);
+      if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(_){} }
+    }
+    function close(go){
+      var k=act; on=false; q.dataset.eat='1'; setTimeout(function(){ delete q.dataset.eat; },400); q.classList.remove('on'); act=-1;
+      if(go && k>=0 && idx[k]!==pf.getCurrentPageIndex()){ try{ pf.flip(idx[k],'bottom'); }catch(_){ pf.turnToPage(idx[k]); } }
+    }
+    function cancel(){ if(timer){ clearTimeout(timer); timer=null; } }
+    function down(x,y,e){
+      if(on) return; if(document.getElementById('gate')&&getComputedStyle(document.getElementById('gate')).display!=='none') return;
+      if(document.getElementById('player')) return;
+      sx=x; sy=y; cancel(); timer=setTimeout(function(){ timer=null; open(sx,sy); },450);
+    }
+    function move(x,y,e){
+      if(on){ if(e.cancelable) e.preventDefault(); e.stopPropagation(); grow(x); return; }
+      if(timer && (Math.abs(x-sx)>10||Math.abs(y-sy)>10)) cancel();
+    }
+    function up(e){
+      cancel(); if(!on) return; if(e.cancelable) e.preventDefault(); e.stopPropagation(); close(true);
+    }
+    window.addEventListener('touchstart',function(e){ if(e.touches.length>1){ cancel(); return; } var t=e.touches[0]; down(t.clientX,t.clientY,e); },{capture:true,passive:true});
+    window.addEventListener('touchmove',function(e){ var t=e.touches[0]; move(t.clientX,t.clientY,e); },{capture:true,passive:false});
+    window.addEventListener('touchend',up,{capture:true,passive:false});
+    window.addEventListener('touchcancel',function(e){ cancel(); if(on) close(false); },{capture:true});
+    window.addEventListener('mousedown',function(e){ down(e.clientX,e.clientY,e); },true);
+    window.addEventListener('mousemove',function(e){ move(e.clientX,e.clientY,e); },true);
+    window.addEventListener('mouseup',up,true);
+    window.addEventListener('click',function(e){ if(q.dataset.eat){ e.stopPropagation(); e.preventDefault(); delete q.dataset.eat; } },true);
+    window.addEventListener('contextmenu',function(e){ if(on||timer) e.preventDefault(); },true);
+  })();
 
   var hint=document.getElementById('hint');
   pf.on('changeState',function(e){ if(e.data==='flipping'){ flipSound(); hint.style.opacity='0'; } });
