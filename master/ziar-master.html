@@ -284,6 +284,14 @@ html.app,html.app body{background:#0B1A55}html.app body{padding:env(safe-area-in
 .hist .yr small{display:block;font-family:var(--font-mono);font-weight:500;font-size:.34em;letter-spacing:.02em;color:var(--muted);text-transform:uppercase;margin-top:.25em}
 .hist b{font-family:var(--font-display);font-stretch:82%;font-weight:800;font-size:1em;line-height:1.12;display:block;margin-bottom:.15em}
 .hist p{font-size:.8em;line-height:1.3}
+/* antetul paginilor 2+: logo, apoi linie EKG în bleul logoului până la capăt, unde bate o inimă roșie */
+.runhead>span:not(.glint){display:none}
+.runhead>.glint,.runhead>.minilogo{flex:none}
+.runhead .ekg{flex:1 1 0;min-width:2em;height:2em;margin:0 0 0 -.15em;display:block;overflow:visible}
+.runhead .ekg path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.runhead .ekg .eb{stroke:#3FA9D6;stroke-width:1.2;opacity:.45}
+.runhead .ekg .eh{stroke:#5CC6E8;stroke-width:2;filter:drop-shadow(0 0 2px #58C0DE) drop-shadow(0 0 5px rgba(88,192,222,.9))}
+.runhead .ekg .hrt{fill:#E3263B;filter:drop-shadow(0 0 3px rgba(227,38,59,.75));transform-box:fill-box;transform-origin:50% 55%}
 </style>
 </head>
 <body>
@@ -1162,6 +1170,44 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     window.addEventListener('mouseup',up,true);
     window.addEventListener('click',function(e){ if(q.dataset.eat){ e.stopPropagation(); e.preventDefault(); delete q.dataset.eat; } },true);
     window.addEventListener('contextmenu',function(e){ if(on||timer) e.preventDefault(); },true);
+  })();
+
+  // Antetul paginilor 2+: după logo, o linie EKG în bleul logoului, cu un puls sănătos (~72/min), până la capătul din dreapta,
+  // unde bate o inimă roșie în același ritm.
+  (function(){
+    var NS='http://www.w3.org/2000/svg', BEAT=60/72;
+    function build(rh){
+      var lg=rh.querySelector('img.minilogo'); if(!lg) return;
+      var svg=rh.querySelector(':scope>svg.ekg');
+      if(!svg){ svg=document.createElementNS(NS,'svg'); svg.setAttribute('class','ekg'); svg.setAttribute('aria-hidden','true');
+        var at=(lg.closest&&lg.closest('.glint'))||lg; if(at.parentNode!==rh) at=lg; at.parentNode.insertBefore(svg,at.nextSibling); }
+      var r=svg.getBoundingClientRect(), w=Math.round(r.width), h=Math.round(r.height); if(!(w>30&&h>8)) return;
+      var key=w+'x'+h; if(svg.dataset.k===key) return; svg.dataset.k=key;
+      svg.setAttribute('viewBox','0 0 '+w+' '+h);
+      var m=h/2, a=h*0.44, hs=Math.min(h*0.8,16), ex=w-hs-6;               // ex = unde se termină linia, înaintea inimii
+      var step=Math.max(44,Math.min(66,ex/2.2)), d='M0,'+m, x=0, n=0;
+      while(x+step<=ex+1){ var b=x+Math.min(12,step*.22);
+        d+=' L'+b+','+m+' Q'+(b+3)+','+(m-a*.18)+' '+(b+6)+','+m+' L'+(b+9)+','+m+' L'+(b+10.5)+','+(m+a*.22)+' L'+(b+13)+','+(m-a)+' L'+(b+15.5)+','+(m+a*.55)+' L'+(b+17)+','+m+' L'+(b+21)+','+m+' Q'+(b+25)+','+(m-a*.3)+' '+(b+29)+','+m;
+        x+=step; n++; d+=' L'+x+','+m; }
+      d+=' L'+ex+','+m;
+      svg.innerHTML='';
+      var base=document.createElementNS(NS,'path'); base.setAttribute('class','eb'); base.setAttribute('d',d); svg.appendChild(base);
+      var hi=document.createElementNS(NS,'path'); hi.setAttribute('class','eh'); hi.setAttribute('d',d); svg.appendChild(hi);
+      var len=hi.getTotalLength(), seg=Math.min(len*.4,step*1.1), dur=Math.max(1,n)*BEAT;
+      hi.style.strokeDasharray=seg+' '+(len+seg);
+      try{ hi.animate([{strokeDashoffset:seg},{strokeDashoffset:-len}],{duration:dur*1000,iterations:Infinity}); }catch(_){}
+      // inima roșie de la capăt
+      var hx=w-hs-1, hy=m-hs*0.5, k=hs/24;
+      var hp=document.createElementNS(NS,'path'); hp.setAttribute('class','hrt');
+      hp.setAttribute('d','M12 21.4l-1.5-1.3C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.6L12 21.4z');
+      hp.setAttribute('transform','translate('+hx+','+hy+') scale('+k+')');
+      var g=document.createElementNS(NS,'g'); g.appendChild(hp); svg.appendChild(g);
+      g.style.transformBox='fill-box'; g.style.transformOrigin='50% 55%';
+      try{ g.animate([{transform:'scale(1)'},{transform:'scale(1.28)',offset:.12},{transform:'scale(1)',offset:.24},{transform:'scale(1.14)',offset:.34},{transform:'scale(1)',offset:.48},{transform:'scale(1)'}],{duration:BEAT*1000,iterations:Infinity}); }catch(_){}
+    }
+    function all(){ document.querySelectorAll('.page .runhead').forEach(function(rh){ try{ build(rh); }catch(_){} }); }
+    all(); setTimeout(all,400); window.addEventListener('resize',function(){ setTimeout(all,120); });
+    pf.on('flip',function(){ setTimeout(all,30); }); pf.on('changeState',function(){ setTimeout(all,30); });
   })();
 
   var hint=document.getElementById('hint');
