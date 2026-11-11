@@ -195,7 +195,7 @@ p{margin:0}
 #qnav.on{display:block;animation:qnIn .2s ease-out}
 @keyframes qnIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 #qnav svg{position:absolute;left:0;bottom:0;display:block;overflow:hidden}
-#qnav:before{content:"";position:absolute;left:0;right:0;bottom:0;height:27.5vh;min-height:176px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 40px);mask-image:linear-gradient(to bottom,transparent 0,#000 40px)}
+#qnav:before{content:"";position:absolute;left:0;right:0;bottom:0;height:100%;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 40px);mask-image:linear-gradient(to bottom,transparent 0,#000 40px)}
 #qnav text{font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;font-weight:700;fill:#0B1A55;letter-spacing:.01em}
 #qnav .qlab{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;font-weight:700;font-size:17px;color:#fff;background:#0B1A55;padding:7px 14px;border-radius:20px;box-shadow:0 4px 14px rgba(11,26,85,.4);opacity:0;transition:opacity .12s}
 #qnav .qlab.v{opacity:1}
@@ -679,7 +679,9 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
     texts.forEach(function(t){ svg.appendChild(t); });
     q.appendChild(logo);
     function geom(){
-      W=window.innerWidth; H=Math.max(176,Math.round(window.innerHeight*0.275));
+      var st=document.getElementById('stage'), sr=st?st.getBoundingClientRect():{left:0,width:window.innerWidth,height:window.innerHeight,bottom:window.innerHeight};
+      W=Math.round(sr.width); H=Math.max(176,Math.round(sr.height*0.275));
+      q.style.left=Math.round(sr.left)+'px'; q.style.width=W+'px'; q.style.height=H+'px'; q.style.right='auto'; q.style.bottom=Math.max(0,Math.round(window.innerHeight-sr.bottom))+'px';
       R1=Math.min(W,H*2.3); R0=Math.max(84,Math.round(R1*0.27));
       svg.setAttribute('width',W); svg.setAttribute('height',H); var mk='linear-gradient(to bottom,transparent 0,rgba(0,0,0,.35) '+Math.round(FADE*.45)+'px,#000 '+FADE+'px)'; svg.style.webkitMaskImage=mk; svg.style.maskImage=mk; svg.setAttribute('viewBox','0 0 '+W+' '+H);
       lab.style.bottom=(H+8)+'px';
@@ -707,8 +709,8 @@ subiecte_recente: 2026-11-09 copil de piatră Somaliland; gel smalț Nottingham;
       }
     }
     function pick(x,y){
-      var top=window.innerHeight-H; if(y<top-50) return -1;
-      var d=Math.sqrt((x-W)*(x-W)+(y-window.innerHeight)*(y-window.innerHeight));
+      var qr=q.getBoundingClientRect(), cx=qr.left+W, cy=qr.bottom; if(y<cy-H-50) return -1;
+      var d=Math.sqrt((x-cx)*(x-cx)+(y-cy)*(y-cy));
       if(d<R0||d>R1+30) return -1;
       return Math.max(0,Math.min(N-1,Math.floor((R1-d)/((R1-R0)/N))));
     }
